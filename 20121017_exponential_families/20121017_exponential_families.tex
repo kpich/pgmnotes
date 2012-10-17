@@ -1,0 +1,549 @@
+\documentclass{article}
+
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{amsmath,amssymb}
+
+\title{PGM Class Notes, Exponential Families}
+\author{Karl Pichotta \\ pichotta@cs.utexas.edu}
+\date{October 17, 2012}
+
+
+\newcommand{\B}{\mathcal{B}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\inv}{^{-1}}
+
+
+\begin{document}
+
+\maketitle
+
+
+
+
+\section{Exponential Distributions}
+
+$$
+P(x;\eta) = h(x) \exp\{ \eta^TT(x) - A(\eta) \}
+$$
+
+We have
+$$
+\exp(A(\eta))
+=
+\int
+h(x) 
+\exp(\eta^TT(x))
+\, dx
+$$
+and
+$$
+p(x;\eta)
+=
+\frac{h(x) \exp\{ \eta^T T(x)\}}
+{\exp(A(\eta))}
+$$
+
+
+\section{Examples}
+
+\begin{enumerate}
+	\item
+	\textbf{Bernoulli Dist.}
+	Parametrized by $\pi$, bias of a coin. $X\in\{0,1\}$.
+	\begin{align}
+	p(x;\pi) &= \pi^x (1-\pi)^{1-x} \\
+	&= \exp ( x \log \pi + (1-x) \log (1-\pi)) 
+	\\
+	&= \exp  \left( x \log \frac{\pi}{1-\pi} + \log (1-\pi) \right) 
+	\\
+	\end{align}
+	So to make it exponential, we have
+	$$
+	\eta = -\log \frac{\pi}{1 - \pi}
+	\Rightarrow
+	\exp\eta = \pi / (1 - \pi)
+	\Rightarrow
+	1 - \pi = (1 = \exp\eta)\inv
+	$$
+	(might be missing a -1 sign)
+	$$
+	T(x) = x
+	$$
+	\begin{align*}
+	A(\eta) &= - \log(1 - \pi)
+	\\
+	&= -\log((1 + \exp \eta)\inv)
+	\\
+	&= \log(1 + \exp \eta)
+	\end{align*}
+	
+	
+	
+	\item
+	\textbf{Gaussian}
+	
+	
+	\begin{align}
+	p(x;\mu,\sigma^2) &= 
+	\frac{1}{\sigma\sqrt{2\pi}} \exp\left\{  \frac{1(x-\mu)^2}{2\sigma^2}   \right\}
+	\\
+	&= 
+	\frac{1}{\sigma\sqrt{2\pi}} \exp\left\{  
+		\frac{-x^2}{2\sigma^2}
+		-
+		\frac{\mu^2}{2\sigma^2}
+		+
+		\frac{x\mu}{2\sigma^2}
+		-\log\sigma
+	\right\}
+	\\
+	&= 
+	\frac{1}{\sigma\sqrt{2\pi}} \exp\left\{  
+		x^2\frac{-1}{2\sigma^2}
+		+
+		x
+		\frac{\mu}{2\sigma^2}
+		-
+		\left(
+		\frac{\mu^2}{2\sigma^2}
+		+\log\sigma
+		\right)
+	\right\}
+	\end{align}
+	This is the ``moment representation''.
+	
+	So we have
+	$$
+	\eta = \langle
+	\mu/\sigma^2
+	\qquad
+	-1/2\sigma^2
+	 \rangle
+	$$
+	and
+	$$
+	T(x) = \langle   x\qquad x^2   \rangle
+	$$
+	
+	$$
+	A(\eta) = 
+	\frac{-\eta_1^2}
+	{4\eta_2}
+	-
+	1/2 \log(-2\eta_2)
+	$$
+	(I might have copied that wrong; double check it.)
+	And so we get our canonical representation
+	$$
+	p(x;\eta) = (2\pi)^{-1/2} \exp\left\{   \eta_1 x + \eta_2 x^2  - A(\eta)  \right\}
+	$$
+	
+	\item
+	\textbf{Multinomial}
+	$x = (x_1,\ldots,x_p)$
+	parametrized by $\pi_1, \ldots, \pi_p$ s.t.\ $\pi_i\geq 0$ and $\sum \pi_i = 1$.
+	Toss a die $n$ times, let $X_i$ be the number of times the die lands on face $i$.
+	$$
+	p(x;\pi) = 
+	\frac{n!}
+	{x_1!x_2!\ldots x_p!}
+	\pi_1^{x_1}
+	\cdots
+	\pi_p^{x_p}
+	$$
+	So we can write this as
+	\begin{align}
+	p(x;\pi)
+	&=
+	\frac{n!}  {\prod_i x_i!}
+	\exp
+	\left\{
+		x_1\log\pi_1 + \cdots + 
+		x_p \log \pi_p
+	\right\}
+	\end{align}
+	So we might think we can write
+	$T(x) = \langle x_1, \ldots, x_p\rangle$
+	and
+	$\eta = \langle \log \pi_1 ,\ldots, \log\pi_p\rangle$
+	This doesn't work though because there's a linear dependence between the $x$'s that we don't
+	have here: $\sum_i x_i = n$.
+	There's of course also one in the $\pi_i$'s.
+	So we can express $x_p$ in terms of $x_1, \ldots, x_{1-p}$, ditto with the $\pi$'s.
+	So we werite
+	$$
+	X_p = n - \sum_{i=1}^{p-1}X_i
+	$$
+	and
+	$$
+	\pi_p = 1 - \sum_{i=1}^{p-1}\pi_i
+	$$
+	So our joint becomes
+	\begin{align}
+	p(x;\pi)
+	&=
+	\frac{n!}  {\prod_i x_i!}
+	\exp
+	\left\{
+		x_1\log\pi_1 + \cdots +
+		\left(  n - \sum_{i=1}^{p-1}X_i \right)
+		\log \left( 1 - \sum_{i=1}^{p-1}\pi_i \right)
+	\right\}
+	\\
+	&=
+	\frac{n!}  {\prod_i x_i!}
+	\exp
+	\left\{
+		\sum_{i = 1}^{p-1}
+		x_i\log \frac{\pi_i}{ 1 - \sum_{i\neq p} \pi_i}
+		+
+		n \log\left( 
+		1 - \sum{i\neq p} \pi_i
+		 \right)
+	\right\}
+	\end{align}
+	giving us
+	$$
+	T(x) = \langle x_1, \ldots, x_p\rangle
+	$$
+	and
+	$$
+	\eta = 
+	\left\langle
+	\log \frac{\pi_1} {1 - \sum_{i\neq p} \pi_i}
+	,
+	\ldots
+	,
+	\log \frac{\pi_p} {1 - \sum_{i\neq p} \pi_i}
+	\right\rangle
+	$$
+	with our $A$ term:
+	$$
+	A(\eta) =
+	- n\log
+	\left(
+	1 - \sum_{i\neq p} \pi_i
+	\right)
+	$$
+	Consider $\eta_i$:
+	\begin{align}
+	&
+	\eta_i
+	=
+	\log
+	\frac{\pi_i} {1 - \sum_{i\neq p} \pi_i}
+	\\
+	\Leftrightarrow \quad&
+	\exp \eta_i
+	=
+	\frac{\pi_i} {1 - \sum_{i\neq p} \pi_i}
+	\\
+	\Leftrightarrow \quad&
+	\sum_{i\neq p}
+	\exp \eta_i
+	=
+	\frac{\sum_{i\neq p}\pi_i} {1 - \sum_{i\neq p} \pi_i}
+	\\
+	\Leftrightarrow \quad&
+	\sum_{i\neq p}
+	\pi_i
+	=
+	\frac{\sum_{i\neq p}\exp \eta_i} {1 - \sum_{i\neq p} \exp\eta_i}
+	\\
+	\Leftrightarrow \quad&
+	1 - 
+	\sum_{i\neq p}
+	\pi_i
+	=
+	\frac{1} {1 + \sum_{i\neq p} \exp\eta_i}
+	\end{align}
+	(I don't get step (14), jeeez)
+	and so
+	$$
+	A(\eta)
+	=
+	n \log \left(
+	1 + \sum_{i\neq p} \exp(\eta_i)
+	\right)
+	$$
+	Note that I think there's a minus sign somewhere that's flipped...
+	
+	
+	\item
+	\textbf{Poisson}
+	The pmf is
+	\begin{align}
+	p(x;\lambda)
+	&=
+	\frac{e^{-\lambda} \lambda^x}{ x!}
+	\\
+	&=
+	\frac{1}{x!} \exp\{
+	x\log \lambda - \lambda
+	\}
+	\end{align}
+	givig us
+	$T(x) = x$, $\eta = \log \lambda$, and $A(\eta) = E^\eta$.
+	And I can breathe a sigh of relief.
+	
+	
+	
+\end{enumerate}
+
+
+
+
+\section{Moments and Canonical Parameters}
+
+What's the expectation of an exponential family?
+\begin{align*}
+\E[X] = 
+\int_{\mathcal X}
+h(x) \exp\{
+\eta^TT(x) - A(\eta)
+\}
+\, dx
+\end{align*}
+What is $A(\eta)$?
+\begin{align*}
+A(\eta) =
+\log
+\int
+h(x) \exp\{
+	\eta^T T(x)
+\}
+\, dx
+\end{align*}
+The grad is:
+\begin{align*}
+\nabla
+A(\eta) =
+\frac
+{
+\int T(x) h(x) \exp\{\eta^T T(x)\} \, dx
+}
+{
+\int
+h(x) \exp\{
+	\eta^T T(x)
+\}
+\, dx
+}
+\end{align*}
+The denominator is the normalization constant, So we have
+\begin{align*}
+\nabla
+A(\eta) &=
+\int
+T(x) p(x;\eta)
+\, dx
+\\
+&=
+\E[T(x)]
+= \mu
+\end{align*}
+So if our sufficient statistics are jsut $X$, then we can take the gradient of our log partition to get the first moment.
+Hrm!
+
+Note $\mu$ is a function of the parameters:
+$$
+\mu = \nabla A(\eta)
+$$
+if this is strictly convex, it is invertible:
+$$
+\Rightarrow
+\eta = (\nabla A)\inv (\mu)
+$$
+So this lets us go from the first moment to the canonical parameters.
+
+What's the second moment like? 
+Recall
+$$
+A(\eta)
+=
+\log
+\int
+h(x) \exp(\eta^T T(X))
+\,
+dx
+$$
+So we have
+\begin{align*}
+A'(\eta)
+&=
+\frac
+{\int T(x) h(x) \exp\{ \eta^T T(x)\}
+}
+{\exp(A(\eta))}
+\end{align*}
+Differentiating this again gives
+\begin{align*}
+A''(\eta)
+&=
+\int
+T(x)
+h(x)
+\exp
+\left\{
+\eta^T T(x) - A(\eta)
+\right\}
+(T(x) - A'(\eta))
+\,
+dx
+\\
+&=
+\int
+T^2(x)
+p(x;\eta)
+\,
+dx
+-
+A'(\eta)
+\int
+T(x) p(x;\eta)\, dx
+\\
+&=
+\E[
+T^2(x)
+]
+- \E[X]^2
+\\
+&=
+Var(T(X))
+\end{align*}
+Rad. 
+
+
+
+\subsection{Examples}
+
+For the Gaussian recall we had
+$$
+	A(\eta) = 
+	\frac{-\eta_1^2}
+	{4\eta_2}
+	-
+	1/2 \log(-2\eta_2)
+$$
+with 
+$$
+	\eta = \langle
+	\mu/\sigma^2
+	\qquad
+	-1/2\sigma^2
+	 \rangle
+$$
+Take the grad wrt one eta at a time:
+\begin{align*}
+\frac{\partial A(\eta)}
+{\partial \eta_1}
+&=
+\frac{-2\eta_1}
+{4\eta_2}
+\\
+&=
+\frac{\eta_1}
+{2\eta_2}
+\\
+&=
+\mu
+\\
+&=
+\E[X]
+\end{align*}
+and
+\begin{align*}
+\frac{\partial A(\eta)}
+{\partial \eta_2}
+&=
+\frac{\eta_1^2}
+{4\eta_2^2}
+-
+\frac{2}
+{4\eta_2^2}
+\\
+&=
+\sigma^2 + \mu^2
+\\
+&=
+\E[X^2]
+\\
+&=
+Var(X)
++
+\E[X]^2
+\end{align*}
+The second derivative gives us the second centered moment:
+\begin{align*}
+\frac{\partial^2 A(\eta)}
+{\partial \eta_2^2}
+&=
+\frac{1}
+{2\eta_2^2}
+\\
+&=
+\sigma^2
+\end{align*}
+
+So $\mu$ and $\eta$ have a one-one mapping, so we can go from one to the other.
+So if we have
+$$
+p(x;\eta)
+=
+\exp\{
+\eta^T T(x) - A(\eta)
+\}
+$$
+we can express this as a function of $\mu$, since $\eta$ is just a function of $\mu$:
+$$
+p(x;\mu)
+=
+\exp\{
+\psi(\mu)^T T(x) - A(\psi(\mu))
+\}
+$$
+
+
+
+
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
