@@ -5,7 +5,7 @@
 \usepackage{amsmath,amssymb}
 
 \title{PGM Class Notes, Exponential Families}
-\author{Karl Pichotta \\ pichotta@cs.utexas.edu}
+\author{Karl Pichotta, Sanmit Narvekar  \\ \{pichotta,sanmit\}@cs.utexas.edu}
 \date{October 17, 2012}
 
 
@@ -24,10 +24,10 @@
 
 
 
-\section{Exponential Distributions}
+\section{Exponential Families}
 
 $$
-P(x;\eta) = h(x) \exp\{ \eta^TT(x) - A(\eta) \}
+p(x;\eta) = h(x) \exp\{ \eta^TT(x) - A(\eta) \}
 $$
 
 We have
@@ -63,13 +63,12 @@ $$
 	\end{align}
 	So to make it exponential, we have
 	$$
-	\eta = -\log \frac{\pi}{1 - \pi}
+	\eta = \log \frac{\pi}{1 - \pi}
 	\Rightarrow
 	\exp\eta = \pi / (1 - \pi)
 	\Rightarrow
-	1 - \pi = (1 = \exp\eta)\inv
+	1 - \pi = (1 + \exp\eta)\inv
 	$$
-	(might be missing a -1 sign)
 	$$
 	T(x) = x
 	$$
@@ -89,24 +88,24 @@ $$
 	
 	\begin{align}
 	p(x;\mu,\sigma^2) &= 
-	\frac{1}{\sigma\sqrt{2\pi}} \exp\left\{  \frac{1(x-\mu)^2}{2\sigma^2}   \right\}
+	\frac{1}{\sigma\sqrt{2\pi}} \exp\left\{  \frac{-(x-\mu)^2}{2\sigma^2}   \right\}
 	\\
 	&= 
-	\frac{1}{\sigma\sqrt{2\pi}} \exp\left\{  
+	\frac{1}{\sqrt{2\pi}} \exp\left\{  
 		\frac{-x^2}{2\sigma^2}
 		-
 		\frac{\mu^2}{2\sigma^2}
 		+
-		\frac{x\mu}{2\sigma^2}
+		\frac{x\mu}{\sigma^2}
 		-\log\sigma
 	\right\}
 	\\
 	&= 
-	\frac{1}{\sigma\sqrt{2\pi}} \exp\left\{  
+	\frac{1}{\sqrt{2\pi}} \exp\left\{  
 		x^2\frac{-1}{2\sigma^2}
 		+
 		x
-		\frac{\mu}{2\sigma^2}
+		\frac{\mu}{\sigma^2}
 		-
 		\left(
 		\frac{\mu^2}{2\sigma^2}
@@ -121,7 +120,7 @@ $$
 	\eta = \langle
 	\mu/\sigma^2
 	\qquad
-	-1/2\sigma^2
+	-1/(2\sigma^2)
 	 \rangle
 	$$
 	and
@@ -134,9 +133,9 @@ $$
 	\frac{-\eta_1^2}
 	{4\eta_2}
 	-
-	1/2 \log(-2\eta_2)
+	\frac{1}{2} \log(-2\eta_2)
 	$$
-	(I might have copied that wrong; double check it.)
+
 	And so we get our canonical representation
 	$$
 	p(x;\eta) = (2\pi)^{-1/2} \exp\left\{   \eta_1 x + \eta_2 x^2  - A(\eta)  \right\}
@@ -174,9 +173,9 @@ $$
 	have here: $\sum_i x_i = n$.
 	There's of course also one in the $\pi_i$'s.
 	So we can express $x_p$ in terms of $x_1, \ldots, x_{1-p}$, ditto with the $\pi$'s.
-	So we werite
+	So we we write:
 	$$
-	X_p = n - \sum_{i=1}^{p-1}X_i
+	x_p = n - \sum_{i=1}^{p-1}x_i
 	$$
 	and
 	$$
@@ -190,7 +189,7 @@ $$
 	\exp
 	\left\{
 		x_1\log\pi_1 + \cdots +
-		\left(  n - \sum_{i=1}^{p-1}X_i \right)
+		\left(  n - \sum_{i=1}^{p-1}x_i \right)
 		\log \left( 1 - \sum_{i=1}^{p-1}\pi_i \right)
 	\right\}
 	\\
@@ -198,17 +197,18 @@ $$
 	\frac{n!}  {\prod_i x_i!}
 	\exp
 	\left\{
-		\sum_{i = 1}^{p-1}
+		\sum_{i\neq p}
 		x_i\log \frac{\pi_i}{ 1 - \sum_{i\neq p} \pi_i}
 		+
 		n \log\left( 
-		1 - \sum{i\neq p} \pi_i
+		1 - \sum_{i\neq p}\pi_i
 		 \right)
 	\right\}
 	\end{align}
-	giving us
+	(note that the summation condition $i\neq p$ is the same as $i$ to $p-1$) \\
+	thus giving us
 	$$
-	T(x) = \langle x_1, \ldots, x_p\rangle
+	T(x) = \langle x_1, \ldots, x_{p-1}\rangle
 	$$
 	and
 	$$
@@ -224,7 +224,7 @@ $$
 	with our $A$ term:
 	$$
 	A(\eta) =
-	- n\log
+	- n \log
 	\left(
 	1 - \sum_{i\neq p} \pi_i
 	\right)
@@ -252,7 +252,7 @@ $$
 	\sum_{i\neq p}
 	\pi_i
 	=
-	\frac{\sum_{i\neq p}\exp \eta_i} {1 - \sum_{i\neq p} \exp\eta_i}
+	\frac{\sum_{i\neq p}\exp \eta_i} {1 + \sum_{i\neq p} \exp\eta_i}
 	\\
 	\Leftrightarrow \quad&
 	1 - 
@@ -261,8 +261,8 @@ $$
 	=
 	\frac{1} {1 + \sum_{i\neq p} \exp\eta_i}
 	\end{align}
-	(I don't get step (14), jeeez)
-	and so
+	(I don't get step (14), jeeez). \\
+	Plugging (15) back into our expression $A(\eta)$ above gives:
 	$$
 	A(\eta)
 	=
@@ -270,9 +270,8 @@ $$
 	1 + \sum_{i\neq p} \exp(\eta_i)
 	\right)
 	$$
-	Note that I think there's a minus sign somewhere that's flipped...
-	
-	
+	Note that the minus sign has been taken into the logarithm (i.e.~taken the reciprocal of the expression (15) inside).
+
 	\item
 	\textbf{Poisson}
 	The pmf is
@@ -286,8 +285,8 @@ $$
 	x\log \lambda - \lambda
 	\}
 	\end{align}
-	givig us
-	$T(x) = x$, $\eta = \log \lambda$, and $A(\eta) = E^\eta$.
+	giving us
+	$T(x) = x$, $\eta = \log \lambda$, and $A(\eta) = \lambda = e^\eta$.
 	And I can breathe a sigh of relief.
 	
 	
@@ -318,7 +317,7 @@ h(x) \exp\{
 \}
 \, dx
 \end{align*}
-The grad is:
+The gradient is:
 \begin{align*}
 \nabla
 A(\eta) =
@@ -346,7 +345,7 @@ T(x) p(x;\eta)
 \E[T(x)]
 = \mu
 \end{align*}
-So if our sufficient statistics are jsut $X$, then we can take the gradient of our log partition to get the first moment.
+So if our sufficient statistics are just $X$, then we can take the gradient of our log partition to get the first moment.
 Hrm!
 
 Note $\mu$ is a function of the parameters:
@@ -367,20 +366,17 @@ A(\eta)
 =
 \log
 \int
-h(x) \exp(\eta^T T(X))
+h(x) \exp(\eta^T T(x))
 \,
 dx
 $$
-So we have
+For the \textbf{univariate} case, we have
 \begin{align*}
 A'(\eta)
 &=
-\frac
-{\int T(x) h(x) \exp\{ \eta^T T(x)\}
-}
-{\exp(A(\eta))}
+\int T(x) h(x) \exp\{ \eta T(x) - A(\eta)\} dx = \E[T(x)]
 \end{align*}
-Differentiating this again gives
+The is the same as we did earlier, but we are dropping the transpose since this is univariate. Differentiating this again gives
 \begin{align*}
 A''(\eta)
 &=
@@ -410,10 +406,10 @@ T(x) p(x;\eta)\, dx
 \E[
 T^2(x)
 ]
-- \E[X]^2
+- (\E[T(x)])^2
 \\
 &=
-Var(T(X))
+Var(T(x))
 \end{align*}
 Rad. 
 
@@ -427,17 +423,17 @@ $$
 	\frac{-\eta_1^2}
 	{4\eta_2}
 	-
-	1/2 \log(-2\eta_2)
+	\frac{1}{2} \log(-2\eta_2)
 $$
 with 
 $$
 	\eta = \langle
 	\mu/\sigma^2
 	\qquad
-	-1/2\sigma^2
+	-1/(2\sigma^2)
 	 \rangle
 $$
-Take the grad wrt one eta at a time:
+Take the gradient wrt one eta at a time:
 \begin{align*}
 \frac{\partial A(\eta)}
 {\partial \eta_1}
@@ -446,7 +442,7 @@ Take the grad wrt one eta at a time:
 {4\eta_2}
 \\
 &=
-\frac{\eta_1}
+\frac{-\eta_1}
 {2\eta_2}
 \\
 &=
@@ -464,7 +460,7 @@ and
 {4\eta_2^2}
 -
 \frac{2}
-{4\eta_2^2}
+{4\eta_2}
 \\
 &=
 \sigma^2 + \mu^2
@@ -480,10 +476,10 @@ Var(X)
 The second derivative gives us the second centered moment:
 \begin{align*}
 \frac{\partial^2 A(\eta)}
-{\partial \eta_2^2}
+{\partial \eta_1^2}
 &=
-\frac{1}
-{2\eta_2^2}
+\frac{-1}
+{2\eta_2}
 \\
 &=
 \sigma^2
@@ -503,47 +499,9 @@ $$
 p(x;\mu)
 =
 \exp\{
-\psi(\mu)^T T(x) - A(\psi(\mu))
+\psi(\mu) T(x) - A(\psi(\mu))
 \}
 $$
 
 
-
-
-
-
-
 \end{document}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
