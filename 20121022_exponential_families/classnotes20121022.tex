@@ -1,0 +1,259 @@
+\documentclass[11pt]{article}
+
+\usepackage{geometry}               
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{amsmath,amssymb}
+
+\newcommand{\B}{\mathcal{B}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\V}{\mathcal{V}}
+\newcommand{\e}{\mathcal{E}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\I}{\mathbb{I}}
+\newcommand{\inv}{^{-1}}
+
+\title{PGM Class Notes}
+\author{Sanmit Narvekar \\ sanmit@cs.utexas.edu}
+\date{October 22, 2012}                                          
+
+\begin{document}
+\maketitle
+
+%%%%%%%%%%%%%%
+% Entropy
+%%%%%%%%%%%%%%
+\section{Entropy}
+
+Suppose we have some random variables $X = (x_1, \ldots , x_p)$ and functions $\phi_\alpha$ such that: 
+$$
+\E[\phi_{\alpha}(X)] = \mu_\alpha
+$$
+where $\alpha \in I$, where $I$ is the index set. Two questions we can ask are (1) what are the distributions $p(x)$ that satisfy these constraints, and (2) which distribution among these maximizes the entropy?
+
+Recall that entropy (lack of information) is defined as:
+\begin{align}
+H(p)
+& = -\int p(x) \log p(x) dx \\
+& = - \sum_x p(x) \log p(x)
+\end{align}
+
+Thus, we want to find
+\begin{align}
+\max_{p \in \mathcal P} -\sum_x p(x) \log p(x)
+\end{align}
+
+such that
+$$ \sum_x p(x) \phi_x (x) = \mu_x \\ $$ 
+$$ \sum_x p(x) = -1 $$ 
+$$ p(x) \geq 0 $$
+
+Since we have constraints, we optimize by taking the Lagrangian
+
+\begin{align}
+\max_{p \in \mathcal P} H(p) 
+& = -\sum_x p(x) \log p(x) + \sum_\alpha \lambda_\alpha [ \sum_x p(x) \phi_\alpha(x) - \mu_\alpha] + \bar{\lambda} (\sum_x p(x) - 1) \\
+& = - \log p(x) -1 + \sum_\alpha \lambda_\alpha \phi_\alpha (x) + \bar{\lambda} \\
+& = 0
+\end{align}
+
+Thus
+
+\begin{align}
+p(x) 
+& = \exp (\bar{\lambda} - 1) \exp(\sum_\alpha \lambda_\alpha \phi_\alpha (x)) \\
+& \propto \exp (\sum_\alpha \lambda_\alpha \phi_\alpha (x))
+\end{align}
+
+%%%%%%%%%%%%%%
+% Notation and Definitions
+%%%%%%%%%%%%%%
+\section{Notation and Definitions}
+
+We now introduce some notation and definitions for the models we will discuss in the following sections. 
+
+We will denote random variables $X = (X_1, X_2, \ldots, X_p)$ where $X_s \in \X$ (some set of values). Additionally, we will define sufficient statistics $\phi_\alpha: X^p \mapsto \R$, where $\alpha \in I$ and $|I| = d$. $\theta_\alpha \in \R$ is associated with each $\phi_\alpha$. Then, we can write the exponential family as
+
+\begin{align}
+p(x) & = \exp \left \{ \sum_\alpha \theta_\alpha \phi_\alpha (x) - A(\theta)   \right \} 
+\end{align}
+
+Defining 
+
+\begin{equation}
+<\theta, \phi(x)> = \sum_\alpha \theta_\alpha \phi_\alpha (x)
+\end{equation}
+
+gives us 
+
+\begin{align}
+A(\theta) & = \log \int \exp \{ <\theta, \phi(x)> dx  \} \\
+\text{OR} & \quad \log \sum_x \exp <\theta, \phi(x)>
+\end{align}
+
+The domain of this function is 
+
+$$ \Omega = \{\theta \in \R^d; \quad A(\theta) < \infty\} $$
+\\ \\
+\subsubsection*{Minimal Exponential Families}
+
+An exponential family is minimal if and only if $\nexists \alpha \in \R^d$ such that $<\theta, \phi(x)> \quad = b$ (b is a constant). That is, there doesn't exist a linear combination of sufficient statistics. 
+
+\textbf{Proof}: (I missed some parts here...)
+
+Suppose $\exists a \in \R^d$ such that $<a, \phi(x)> = b$
+
+$$ \theta \in \R^d$$
+\begin{align}
+p_{\theta+a} (x) & \propto \exp \{ <\theta + a, \phi(x) \} \\
+& \propto \ldots
+\end{align}
+
+
+%%%%%%%%%%%%%%
+% ISING MODEL
+%%%%%%%%%%%%%%
+\section{Ising Model}
+
+This comes up frequently when modeling spin in electrons. Consider again r.v.'s $X = (X_1, \ldots, X_p)$ where $X_s \in \{-1, 1\}$. So, for example, we could be interested in the joint distribution of spin in all molecules. 
+
+Consider a grid of atoms (?), where each node is represented by a r.v.~representing the spin. Our sufficient statistics are
+$$ \{X_s ,\quad s \in \V\} = \{ \theta_s\} $$
+$$ \{X_s X_t ,\quad (s,t) \in \e \} = \{\theta_{st}\}$$
+
+We can write this as an exponential family
+
+\begin{align}
+p(x) = \exp \left \{\sum_{s \in \V} \theta_s X_s + \sum_{(s,t) \in \e} \theta_{st} X_sX_t -A(\theta) \right \}
+\end{align}
+
+and the domain is
+
+$$\Omega = \R^d $$
+$$ d = p + |\e| $$
+
+You can verify this is minimal. We can also make higher order generalizations by considering $X_sX_tX_k$, etc.
+
+%%%%%%%%%%%%%%
+% OVERCOMPLETE EXPONENTIAL FAMILY
+%%%%%%%%%%%%%%
+\section{Overcomplete Exponential Family}
+
+Consider again the r.v.'s $X = (X_1, \ldots, X_p)$, this time drawn from a finite discrete set $X_s \in \X = \{0, 1, \ldots, r-1\}$.
+
+Our sufficient statistics are the indicator functions
+
+\begin{equation}
+I_{s,j} (x) = 
+\begin{cases}
+1 & \text{if } X_s = j, \\ 
+0 & \text{otherwise } \\
+\end{cases}
+\equiv \{\theta_{s,j}\}_{s \in \V, j \in \X}
+\end{equation}
+
+\begin{equation}
+I_{st,jk} (x) = 
+\begin{cases}
+1 & \text{if } X_s = j, X_t = k\\ 
+0 & \text{otherwise } \\
+\end{cases}
+\equiv \{\theta_{st,jk}\}_{(s,t) \in \e; j,k \in \X}
+\end{equation}
+
+Here, the number of parameters $d = pr + |\e|r^2$, and the domain is $\Omega = \R^d$. Note that this is not minimal. 
+
+\subsection{Subclasses}
+
+Comes up in metric labeling. Consider you have a metric $\rho$ over $\X$, where
+
+$$ \rho(j, j) = 0 $$
+$$ \rho (j, k) \geq 0 $$
+$$ \rho (j, l) \leq \rho(j,k) + \rho(k,l) $$
+
+We can write the metric weights (?)
+
+$$ \theta_{st, jk} = -\rho(j,k) $$
+
+(I missed some parts over here)
+
+This model doesn't like neighboring nodes to take values that are far apart (it does this by giving those assignments lower probabilities). This is used in computer vision, e.g.~for segmentation. 
+
+%%%%%%%%%%%%%%
+% GAUSSIAN
+%%%%%%%%%%%%%%
+\section{Gaussian}
+
+Consider again the r.v.'s $X = (X_1, \ldots, X_p)$, drawn from $\R^p$. The sufficient statistics are:
+
+$$ \{X_s, X_s^2 ; s\in \V\} \equiv \theta_s = \Theta_{ss}$$
+$$ \{X_sX_t ; (s, t) \in \e\} \equiv \Theta_{st} $$
+
+where $\Theta$ is the $p$ x $p$ negative inverse of the covariance matrix:
+
+$$ \Theta = - \Sigma\inv $$
+$$ \theta = -\Sigma\inv\mu $$
+
+If an entry $(i,j)$ in $\Theta$ is nonzero, there is an edge between node $i$ and $j$. We can write the exponential family as
+
+\begin{align}
+p(x) = \exp \left \{ \sum_s \theta_s X_s + \sum_{(s,t) \in \e} \Theta_{st}X_sX_t - A(\theta, \Theta) \right \}
+\end{align}
+
+This is minimal, and the domain is
+
+$$ \Omega = \{ (\theta, \Theta) \quad ; \theta \in \R^p, \Theta \leq 0\} $$
+
+%%%%%%%%%%%%%%
+% Mixture Models
+%%%%%%%%%%%%%%
+\section{Mixture Models}
+
+Consider the r.v.'s $X = (X_1, \ldots, X_p)$, drawn from a finite discrete set $X_s \in \X = \{0, 1, \ldots, r-1\}$. $X_s$ is unobserved, and $Y_s$ is observed. 
+
+\begin{align}
+p(X_s) 
+& \propto \exp \left \{ \sum_j \theta_{s,j} \I_j(X_s) \right \} \\
+& \equiv p(X_s = j) \\
+& \propto \exp(\theta_{sj})
+\end{align}
+
+(I missed some more parts over here. Also can't tell if the $\I$ is supposed to be a $\prod$)
+
+$$Y_s | X_s = j \sim \mathcal N(\ldots)$$
+$$ p(Y_s | X_s = j) \propto \exp {\gamma_{sj} y_s + \gamma_{sj}' y_s^2} $$
+$$ p(Y_s|X_s) \propto \exp \left \{ \sum_j \I_j (X_s) (\gamma_{sj} y_s + \gamma_{sj}' y_s^2)  \right \}$$
+
+\begin{align}
+p(X_s, Y_s) 
+& = p(X_s) p (Y_s | X_s) \\
+& \propto \exp \left \{ \sum_j \I_j (X_s) \theta_{sj} + \sum_j \I_j (X_s) \left [  \gamma_{sj} y_s + \gamma_{sj}' y_s^2 \right ]  \right \}
+\end{align}
+
+%%%%%%%%%%%%%%
+% LDA
+%%%%%%%%%%%%%%
+\section{Latent Dirichlet Allocation}
+
+Used to model things like documents. For example, the probability of a particular word given a topic $p(W=j|Z=k) = \gamma_{jk}$. Random variable $U$ is used to determine the topic $Z$. 
+
+\begin{align}
+p(W|Z) & \propto \exp \left \{  \sum_{jk} \I_{j} (w) \I_k (z) \theta_{jk}   \right \} \\
+p(Z = k | U) & = U_k \\
+p(Z|U) & = \exp \left \{ \sum_k \I_k (z) \log U_k  \right \} \\
+p(U) & \propto  \exp \left \{ \sum_k \alpha_k \log U_k  \right \} 
+\end{align}
+
+
+\end{document}  
+
+
+
+
+
+
+
+
