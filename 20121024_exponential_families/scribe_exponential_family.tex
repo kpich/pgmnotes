@@ -1,0 +1,194 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath,amssymb}
+\usepackage{amsthm}
+\usepackage{bbm}
+\usepackage{enumerate}
+\usepackage[retainorgcmds]{IEEEtrantools}
+
+\newcommand{\Bc}{\mathcal{B}}
+\newcommand{\Fc}{\mathcal{F}}
+\newcommand{\Xc}{\mathcal{X}}
+\newcommand{\Vc}{\mathcal{V}}
+\newcommand{\Ec}{\mathcal{E}}
+\newcommand{\Sc}{\mathcal{S}}
+\newcommand{\Mc}{\mathcal{M}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\I}{\mathbb{I}}
+\newcommand{\prob}{\mathbb{P}}
+\newcommand{\1}{\mathbbm{1}}
+
+\newtheorem{prop}{Proposition}
+\newtheorem{thm}{Theorem}
+\newtheorem{define}{Definition}
+\newtheorem{cor}{Corollary}
+\newtheorem{lem}{Lemma}
+
+\title{PGM Scribe Note: Exponential Family 3}
+\author{Xiaolong Li}
+\date{\today}                                          
+
+\begin{document}
+\maketitle
+
+\section{Mean Parameter}
+Consider an exponential family parameterized by $\theta$:
+\[
+p(x, \theta) = \exp\{\langle \theta, \phi(x) \rangle - A(\theta)\}.
+\]
+Define \emph{mean parameter} as the expectation of the sufficient statistics,
+$\mu_\alpha = \E_X[\phi_\alpha(x)]$, where $\alpha \in I$ and $|I| = d$ is the index set. More
+over, we can define the mean parameter space as the set of all realizable mean
+parameters
+\[
+\Mc = \{\mu \in \R^d \; | \; \mu = \E_\prob[\phi(x)] \text{ for some distribution } \prob \text{ over } x\}.
+\]
+
+\begin{prop}
+$\Mc$ is a convex set.
+\end{prop}
+\begin{proof}
+Let $\mu_1 = \E_{\prob_1}[\phi(x)]$, $\mu_2 = \E_{\prob_2}[\phi(x)]$.
+Since for any $0 \leq \lambda \leq 1$, the convex combination $\lambda \prob_1 + (1-\lambda)\prob_2$ of two 
+probability measure $\prob_1$ and $\prob_2$ is still a valid probability measure, and by linearility of measure
+\[
+\lambda \mu_1 + (1-\lambda)\mu_2 = \lambda \E_{\prob_1}[\phi(x)] + (1-\lambda) \E_{\prob_2}[\phi(x)]
+= \E_{\lambda \prob_1 + (1-\lambda)\prob_2}[\phi(x)]
+\]
+This proves the claim.
+\end{proof}
+
+\begin{prop}
+Suppose $X = (X_1, \ldots, X_p)$, $X_i \in \Xc$ where $\Xc$ is a finite set, then $\Mc$ is a polytope.
+\end{prop}
+\begin{proof}
+$\mu \in \Mc$ if and only if $\mu = \sum_{x \in \Xc^p} p(x)\phi(x)$, where $p(x)$ is distribution over
+finite set $\Xc^p$. Thus, by definition, $\Mc$ is the convex hull of finite set
+$\{\phi(x_1), \ldots, \phi(x_n)\}$, $n = |\Xc|^p$. Since the convex hull of finite many points is always
+a polytope, we have proved the claim.
+\end{proof}
+
+As a remark, there are two ways to characterize a polytope. One way, called V-representation, is to characterize
+it as the convex hull of finite many points; another way, called H-representation, is to characterize it as
+the intersection of finite many closed halfspaces. Note that for H-representation, a polytope might not be
+bounded. Therefore, if we want to make it equivalent to V-representation, an additional boundedness condition
+is necessary.
+
+Consider $|\Xc| = 2$, then $\Mc$ has up to $2^p$ vertices and it is forbidding to use V-representation. However,
+it might require far less number of halfsplaces if we use H-representation. We know that if $\Mc$ can be
+represented efficiently, the inference will also be efficient.
+
+(Potential project topic: In general, $r$ half spaces could create exponential vertices. But what about the
+special case for tree? Is it efficiently V-representable?)
+
+\section{Examples}
+\subsection{Multi-variate Gaussian}
+The sufficient statistics is $X$ and $XX^T$, then
+\[
+\Mc = \{(\mu, \Sigma) \; | \; \mu = \E_\prob[X], \Sigma = \E_\prob[XX^T] 
+\text{ for some distribution } \prob \text{ over } x \}.
+\]
+$(\mu, \Sigma)$ is a valid parameter for some Gaussian distribution if and only if
+$\Sigma \succeq \mu\mu^T$, which characterizes the shape of $\Mc$.
+\footnote{We write $A \succeq B$ if $A-B$ is positive semi-definite.}
+
+\subsection{Ising Model}
+Suppose $X = (X_1, X_2, \ldots, X_p)$, $X_s \in \{0, 1\}$.\footnote{In last class, we said $X_s \in \{-1, 1\}$,
+but its all the same after linear transformation.} The sufficient statistics is $X_s$ and $X_sX_t$ for
+$(s,t) \in E$, so the mean parameter is
+\[
+\mu_s = \E[X_s] = \prob(X_s = 1) \in [0, 1]
+\]
+and
+\[\mu_{st} = \E[X_s, X_t] = \prob(X_s = 1, X_t = 1) \in [0,1].
+\]
+
+There are many relationships we can find for the mean parameter, for exmaple
+\[
+\mu_{st} = \prob(X_s=1, X_t=1) \leq \max\{\prob(X_s=1), \prob(X_t=1)\} = \max\{\mu_s, \mu_t\}
+\]
+and many others.
+(But the relationship we mentioned in the class, which is $\sum_t \mu_{st} = \mu_s$, doesn't make sense to me.
+Any comments?) 
+
+However, it is not easy to enumerate all constaints that could fully characterize $\Mc$. In fact, the polytope
+\[
+\Mc = \left\{ \{\mu_s\}_{s\in V} \; \{\mu_{st}\}_{(s,t) \in E} \; | \;
+\mu_s = \E_\prob[X_s] \; \mu_{st} = \E_\prob[X_sX_t] \text{ for some distribution } \prob \right\}
+\]
+is called a cut/correlation polytope and it has exponentially many halfspaces. It is an important topic
+in combinatorics and people don't fully understand it even now.
+
+\subsection{Over Complete Family}
+Suppose $X = (X_1, X_2, \ldots, X_p)$, $X_s \in \{0, 1, \ldots, r-1\}$. The sufficient statistics are
+$\{\1_{s,j}(x)\}_{s\in V}$ and $\{\1_{st,jk}(x)\}_{(s,t) \in E}$, so the mean parameter is
+\[
+\mu_{s,j} = \E[\1_{s,j}(x)] = \prob(X_s = j)
+\]
+and
+\[
+\mu_{st,jk} = \E[\1_{st,jk}(x)] = \prob(X_s = j, X_t = k).
+\]
+
+Since the model is over complete, we have marginalization constraints such as
+\[
+\sum_k \mu_{st,jk} = \mu_{s,j} \text{ for all } s,t,j.
+\]
+Due to this reason (maybe?), the corresponding polytope $\Mc$ is called the margingal polytope, which,
+as in the case of Ising model, could have exponential facets and is complicated in nature. The marginal
+polytope is sometimes denoted as $\Mc(G)$, where $G=(V, E)$ is the underlining pairwise constaint.
+
+\section{Mean Parameter in Inference}
+Consider an exponential family
+\[
+p(x, \theta) = \exp\{\langle \theta, \phi(x) \rangle - A(\theta)\}.
+\]
+where $X = (X_1, \ldots, X_p)$ and $\{\phi_\alpha(x)\}_{\alpha \in I}$ are given. Suppose we have $n$
+independent samples $x^{(1)}, \ldots, x^{(n)} \in \R^p$. To find $\theta$, the traditional way is to
+maximize the log-likelihood
+\[
+\max_{\theta \in \Omega} \sum_{i=1}^n \log p_\theta(x^{(i)}).
+\]
+
+It turns out that for exponential family, it has nice form (since $\log$ of $\exp$ is just linear)
+\[
+\log p_\theta(x^{(i)}) = \langle \theta, \phi(x^{(i)}) \rangle - A(\theta),
+\]
+\[
+\frac{1}{n} \sum_{i=1}^n \log p_\theta(x^{(i)})
+= \langle \theta, \frac{1}{n} \sum_{i=1}^n \phi(x^{(i)}) \rangle - A(\theta).
+\]
+Let $\hat{\mu} = \frac{1}{n} \sum_{i=1}^n \phi(x^{(i)})$, then the maximization could be written as
+\[
+\max_{\theta \in \Omega} \langle \theta, \hat{\mu} \rangle - A(\theta).
+\]
+Notice that $\hat{\mu}$ is convex combination of $\phi(x^{(i)})$, so $\hat{\mu} \in \Mc$.
+
+\section{Properties of $A(\theta)$}
+\begin{enumerate}[(a)]
+\item \label{convexity}
+$A(\theta)$ is a convex function.
+\item \label{strong_convexity}
+$A(\theta)$ is strongly convex if the exponential family is minimal.
+\item \label{derivatives}
+$\nabla A(\theta) = \E[\phi(x)]$, $\nabla^2 A(\theta) = \mathrm{Cov} (\phi(x))$.
+\end{enumerate}
+We have already proved (\ref{derivatives}) in previous class. (\ref{convexity}) and (\ref{strong_convexity})
+are important since it guarantees the convexity of log-likelihood. To prove (\ref{convexity}) assuming
+it is twice-differentiable, just notice $\nabla^2 A(\theta) = \mathrm{Cov} [\phi(x)] \succeq 0$.
+\begin{proof}[Proof of (\ref{strong_convexity})]
+If the exponential family is minimal, then $\langle a, \phi(x) \rangle$ is not constant for all $a$. If $X$
+is discrete, then this implies that $\mathrm{Var} (\langle a, \phi(x) \rangle) > 0$. If $X$ is continuous and
+$\phi(x)$ is continuous, then it also implies that $\mathrm{Var} (\langle a, \phi(x) \rangle) > 0$. The last
+step is to notice that $a^T \nabla^2 A(\theta) a = \mathrm{Var}(\langle a, \phi(x) \rangle)$.
+\end{proof}
+
+\end{document}
+
+
+
+
+
+
