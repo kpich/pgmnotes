@@ -1,0 +1,675 @@
+\documentclass{article}
+
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+
+\title{PGM Course Notes: Mean Field Approximations}
+\author{Karl Pichotta \\ pichotta@cs.utexas.edu}
+\date{November 5, 2012}
+
+\newcommand{\B}{\mathcal{B}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\M}{\mathcal{M}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\inv}{^{-1}}
+
+\newcommand{\converged}{\stackrel{d}{\longrightarrow}}
+\newcommand{\convergep}{\stackrel{p}{\longrightarrow}}
+\newcommand{\convergeas}{\stackrel{as}{\longrightarrow}}
+\newcommand{\convergems}{\stackrel{ms}{\longrightarrow}}
+
+
+\begin{document}
+
+\maketitle
+
+%\section{Some unrelated stuff I didn't quite understand}
+%
+%
+%
+%We have a table $f(x)$:
+%\begin{tabular}{ll}
+%$x$ & $f(x)$ \\
+%0 & 0.1 \\
+%1 & 0.2 \\
+%2 & 0.3 \\
+%3 & 0.4 \\
+%\end{tabular}
+%
+%And one
+%\begin{tabular}{ll}
+%$X_s$ & $X_t$ \\
+%0 & 0.1 \\
+%1 & 0.2 \\
+%2 & 0.3 \\
+%3 & 0.4 \\
+%\end{tabular}
+%
+%This can be written
+%$$
+%p(x) \propto \prod_{(s,t)\in E}
+%\psi_{st}(x_s, x_t)
+%$$
+%$$
+%\propto
+%\exp\{
+%\sum_{(s,t)\in E}
+%\log
+%\psi_{st}(x_s, x_t)
+%\}
+%$$
+%But this is simply
+%$$
+%p(x) \propto
+%\exp
+%\left\{
+%\sum_{(s,t)\in E}
+%\sum_{j,k\in \mathcal X}
+%\theta_{st, jk}
+%\mathbf{1} (X_s = j, X_t = k)
+%\right\}
+%$$
+
+\section{Motivation; restricting $\Omega$}
+
+So we have
+$$
+A(\theta) = 
+\sum_{\mu\in\M}
+\left\{
+\langle\theta,\mu\rangle
+- 
+A^\star(\mu)
+\right\}
+$$
+We looked at approximating this in general, but we can also approximate by looking at tractable subgraphs of $G$.
+
+So we have
+\begin{align}
+p(x,\theta,G)
+&=
+\exp\{
+\langle \theta, \phi(x)\rangle
+- A(\theta)
+\\
+&=
+\sum_{(s,t)\in E}\theta_{st} \phi_{st} (x_s, x_t).
+\end{align}
+
+What do we do?
+\begin{align}
+A(\theta) &= 
+\sum_{\mu\in\M}
+\left\{
+\langle\theta,\mu\rangle
+- 
+A^\star(\mu)
+\right\}
+\\
+& \geq 
+\langle \theta, \mu\rangle - A^\star(\mu)
+\quad
+\forall \mu\in\M
+\end{align}
+We have a graph $G=(V,E)$.
+Define $\Theta_{(s,t)}$ to be the parameter subvector of all parameters on edge $(s,t)$.
+
+For example, if we have an Ising model, then $\Theta_{(s,t)} = \theta_{st}$, that is, a single param.
+
+As another example, if we have the canonical overcomplete model, 
+$$
+\Theta_{(s,t)} = (\theta_{st;jk}) \equiv \{\theta_{st;jk} : j,k \in \mathcal X\}
+$$
+
+So parameters in general have the restriction
+$$
+\Omega \equiv
+\{
+\theta\in \R^d : A(\theta) < +\infty
+\}
+$$
+we can restrict our attention to a subset of $\Omega$:
+$$
+\Omega(F)
+\equiv
+\{
+\theta\in \Omega
+:
+\theta_{\alpha} = 0
+\quad
+\forall \alpha \in I(G) \setminus I(F)
+\}
+$$
+for a subgraph $F\subset G$, with $I(G)$ the index set of parameters given graph $G$.
+That is to say, we are requiring the parameters not in $I(F)$ to be 0.
+So, for example, if we just have edge parameters, then this would be equivalent to setting all edge params not in $F$ to 0.
+
+\section{Some examples}
+
+\textbf{Example},
+Consider $F_{0} \equiv (V,\emptyset)$, the null graph of $G$ with no edges.
+Then
+$$
+\Omega(F_0) = 
+\{
+\theta\in\Omega:
+\theta_\alpha = 0
+\forall \alpha \in 
+I(G) \setminus I(F_0)
+\}
+$$
+
+\textbf{Example},
+Consider the Ising model
+$$
+p(x;\theta)
+=
+\exp
+\left\{
+\sum_{(s,t)\in E}
+\theta_{st} x_s x_t
++ \sum_{s}
+\theta_s x_s
+-
+A(\theta)
+\right\}
+$$
+Our set 
+$$
+\Theta = 
+\{
+\{\theta_s\}_{s\in V};
+\}\theta_{st}\}_{(s,t)\in E}
+\}
+$$
+$\Omega$ is $R^{|V| + |E|}$.
+What is $\Omega(F_0)$?
+It is
+$$
+\Omega(F_0) = 
+\{
+\theta\in\Omega :
+\theta_{st} = 0
+\forall (s,t)\in E
+\}
+\subseteq \R_{|V| + |E|}
+$$
+
+So if $\theta\in\Omega(F_0)$, then this is a distribution respecting the graph $F_0$, and therefore must factor over $F_0$.
+This means
+\begin{align}
+p(x;\theta)
+&=
+\prod_{s\in V}
+p(x_s ; \theta)
+\\
+&=
+\prod_{s\in V} \exp\{\theta_sx_s - \dots\}
+\end{align}
+Again, this is most clearly viewed as a graphical model distribution respecting graph $F_0$.
+
+
+\textbf{Example},
+If $F$ is a tree $T$, then $\Omega(T)$ has 0 for the parameters not on the tree $T$, and so will factorize according to a graph structure.
+
+\section{Mean Field Approximation: Definition}
+
+So we have this correspondence between $\Omega$ and $\M$ parameters:
+\begin{align*}
+\Omega & \rightarrow  \M(G) \\
+\Omega_F(G) & \rightarrow  \M_F(G) \\
+\end{align*}
+What is $\M_F(G)$?
+Recall that
+$$
+\nabla A(\Omega_F(G))
+$$
+gives us the relative interior of $M_F(G)$.
+Thus, The closure $Cl(\nabla A(\Omega_F(G)))$ gives us the entirety of $\M_F(G)$.
+Take that as the definition of $\M_F(G)$.
+
+\begin{align}
+A(\theta)
+\geq
+\langle \theta,\mu\rangle - A^\star(\mu)
+\label{mueq}
+\end{align}
+for any $\mu$; we saw this above.
+
+We have $\Omega$ and $\M$.
+The set $\M$ is the image of $\Omega$ under $\nabla A$ (modulo boundaries, I believe).
+So the image $\nabla A[\Omega(F)] \subseteq \M$.
+We will later prove that $\M_F(G) \subseteq \M(G)$.
+
+Returning to an equation above, we have
+\begin{align}
+A(\theta)
+\geq
+\sum_{\mu\in \M_F(G)}
+\langle \theta,\mu\rangle - A^\star(\mu)
+\label{mueq2}
+\end{align}
+which follows from \eqref{mueq} and our observation that $\M_F(G)$ is in $\M(G)$.
+So mean field is, effectively, solving \eqref{mueq2}.
+
+The \textbf{mean-field approximation} is:
+\begin{align}
+A(\theta)
+\geq
+\sup_{\mu\in\M_F(G)}
+\left\{
+\langle
+\theta, \mu\rangle
+-
+A^\star(\mu)
+\right\}
+\label{meanfieldeq}
+\end{align}
+For the mean-field $F = F_0\equiv (V,\emptyset)$.
+On the otherhand, \textbf{Structured mean-field} is the more general
+case where $F$ is a subgraph of $G$.
+
+Note that as we take bigger and bigger subgraphs $F$, we get tighter lower bounds (i.e.\ better approximations).
+If we have a densely connected graph with lots of symmetry, mean-field performs surprisingly well.
+
+\section{Examples of Mean Field}
+
+Consider the Ising model:
+$$
+p(x;\theta) = 
+\exp
+\left\{
+\sum_{(s,t)}
+\theta_{st}x_sx_t
++
+\sum_{s}
+\theta_s x_s
+- A(\theta)
+\right\}
+$$
+We have $\Omega = \R^{|V| + |E|}$ and $\Omega(F_0)$ (see above).
+Now, we have
+$$
+\M_{F_0}(G) = 
+\left\{
+\{\mu_s\}_{s \in V};
+\{\mu_{st}\}_{(s,t) \in E}
+\quad:
+(\textrm{some conditions defined below});
+\right\}
+$$
+such that we get these as expectations of distributions respecting $F_0$.
+Now, since there are no edges, we have the distribution of any variable being independent of all other variables.
+If we have independence, we also have $X_s$ and $X_t$ uncorrelated:
+$$
+\E[X_s X_t] = 
+\E[X_s]
+\E[X_t].
+$$
+Note the LHS above is exactly $\mu_{st}$.
+We therefore have a refinement of $\M_F(G)$:
+$$
+\M_{F_0}(G) = 
+\left\{
+\{\mu_s\}_{s \in V};
+\{\mu_{st}\}_{(s,t) \in E};
+\quad:
+\mu_{st} = \mu_s\mu_t; \mu_s \in [0,1]
+\right\}
+$$
+So this is the set of numbers between $0$ and $1$ (the $\mu_s$'s) and then products of them.
+So it's a unit hypercube.
+
+Now, for $\mu \in \M_{F_0}(G)$, what is $A^\star(\mu)$?
+It is:
+$$
+-A^\star(\mu)
+=
+\sum_{s\in V}
+H_S (\mu_s)
+$$
+Because, 
+since the distributions are all independent, to get the entropy of the joint (which is the negative of $A^\star(\mu)$), we just add the entropies---this is a basic property of entropy.
+
+So cool, putting it together:
+\begin{equation}
+\sup_{\mu\in \M_{F_0}(G) ; \mu_s\in [0,1]}
+\left\{
+\sum_{s\in V}
+\theta_s\mu_s
++ \sum_{(s,t)\in E} \theta_{st} \mu_s \mu_t
+-
+\sum_s
+\left(
+\mu_s \log \mu_s
++
+(1 - \mu_s)
+\log(1 - \mu_s)
+\right)
+\right\}
+\label{meanfieldeq1}
+\end{equation}
+again, the $\sup$ just ranges over the unit hypercube.
+Recall this is our lower bound for $A(\theta)$ as given by the equation above.
+This is nonconvex in general because of the second term, which is quadratic :(.
+If we maximize it we'll get a local maximum (which is better than nothing).
+
+The standard mean-field updates are a way to solve this coordinate ascent problem.
+
+\textbf{Coordinate ascent} is the problem where, supposing we have
+$$
+\min_{\mu\in B} (f(u))
+$$
+we iterate over $j\in \{1,\ldots,p\}$, one of our dimensions (assuming $\mu \in \R^p$).
+Fix all the variables other than $\mu_j$, and then optimize over $\mu_j$.
+Then repeat.
+That is, we iteratively optimize over a single coordinate by treating all the other coordinates as fixed.
+This is really simple (easy to code, and optimizing over a single variable is easy) and works pretty well a lot of the time.
+We apply this to our problem.
+
+Suppose we use coordinate descent to optimize over $\mu_s$.
+What's the gradient wrt $\mu_s$? It is:
+$$
+\theta_s  +
+\sum_{t\in N(s)} \theta_{st}\mu_t
+-
+\log\mu_s - 1
++\log(1 - \mu_s) + 1
+$$
+with $N(s)$ the set of neighbors of $s$.
+(recall we get this from \eqref{meanfieldeq1}).
+Setting this to 0 gives us
+\begin{align*}
+\log\frac{\mu_s}{1 - \mu_s}
+=
+\theta_s + \sum_{t\in N(s) }\theta_{st} \mu_t
+\\
+\frac{\mu_s}{1 - \mu_s}
+=
+\exp(\dots)
+\\
+\mu_s = \frac{\exp(...)}{1 + \exp(...)} = \sigma(\theta_s + \sum_{t\in N(s)} \theta_{st} \mu_t)
+\end{align*}
+with $\sigma(x)$ the logistic function.
+So we get our coordinate descent rule:
+$$
+\mu_s \leftarrow
+\sigma(\theta_s + 
+\sum_{t\in N(s)} \theta_{st \mu_t}
+)
+$$
+which is much simpler than sum-product.
+
+\section{Framing in terms of KL divergence}
+
+KL divergence is a typical way to look at the difference between distributions $p$ and $q$.
+The KL Divergence between them is
+\begin{align}
+D(p\| q)
+&\equiv
+\E_p\left[
+\log\frac{p(x)}{q(x)}
+\right]
+\\
+&=
+\sum_x p(x) \log \frac{p(x)}{q(x)}
+\end{align}
+Note this looks a lot like entropy (it's sometimes called the relative entropy of $p$ and $q$).
+Note also it's not symmetric, so not a distance metric.
+
+So ok, let $p\equiv P_{\theta_1}$ and $q \equiv P_{\theta_2}$, the distributions of params $\theta_1$ and $\theta_2$.
+We have
+\begin{align}
+D(p \| q)
+&=
+\log\frac{P_{\theta_1}(x)}{P_{\theta_2}(x)}
+\\
+&=
+\langle \theta_1, \phi(x) \rangle - A(\theta_1)
+-
+\langle \theta_2, \phi(x) \rangle - A(\theta_2) \rangle
+\\
+&=
+- A(\theta_1) - A(\theta_2)
+-
+E_{P_{\theta_1}}
+\left[
+\langle \phi(x), \theta_2 - \theta_1 \rangle
+\right]
+\\
+&=
+- A(\theta_1) - A(\theta_2)
+-
+\langle \mu_1, \theta_2 - \theta_1
+\rangle
+\label{expeq}
+\\
+&=
+- A(\theta_1) - A(\theta_2)
+-
+\langle \nabla A(\theta_1), \theta_2 - \theta_1
+\rangle
+\label{expeq2}
+\end{align}
+where \eqref{expeq} hides an application of linearity of expectation, and then uses the definition
+ of $E[\phi(x)] = \mu$, and \eqref{expeq2} uses the fact that $\nabla A(\theta_1) = \mu_1$ (this is mentioned in one of the previous notes).
+
+Note that the first-order Taylor approximation of $A(\theta)$ at $\theta_1$ is
+$$
+A(\theta_1) + \nabla A(\theta_1)
+(\theta - \theta_1)
+$$
+At a new point $\theta_2$, we look at how far apart the above Taylor approximation is from $A(\theta_2)$, and we get exactly the value \eqref{expeq2} (this is sometimes called the Bregman divergence).
+
+So OK, another way of looking at this: suppose we have $\theta$ from some graph $G$.
+Suppose we don't like that because it's not a tree or something.
+We ask, then, what is
+$$
+\min_{\overline\theta\in \Omega(F)} D(P_{\overline\theta} \| P\theta)
+$$
+for some $F$ that we like.
+That is, give us the distribution that's closest (under KL) such that it factorizes according to $F$.
+Turns out this is exactly the variational principle we derived above.
+%We have:
+%\begin{align}
+%& 
+%\min_{\overline\theta\in \Omega(F)} D(P_{\overline\theta} \| P_\theta)
+%\\
+%&=
+%\min_{\overline\theta \in \Omega(F)}
+%\{
+%A(\overline\theta)
+%-
+%A(\theta)
+%-
+%\langle
+%\nabla A(\theta), \overline\theta - \theta
+%\rangle
+%\}
+%\\
+%&=
+%\arg\min_{\overline\theta \in \Omega(F)}
+%\{
+%A(\overline\theta)
+%-
+%\langle
+%\nabla A(\theta), \overline\theta
+%\rangle
+%\}
+%\label{vareq1}
+%\end{align}
+%(NOTE the second one above is wrong, and so are the rest).
+%
+%So we've expressed everything in terms of $\overline\theta$.
+%HOWEVER, we already saw the connection between $\mu$'s and $\theta$'s:
+%$$
+%A(\overline\theta)
+%=
+%\langle
+%\overline\mu
+%,
+%\overline\theta
+%\rangle
+%- A^\star(\overline\mu)
+%$$
+%we can write \eqref{vareq1} as:
+%
+%
+%
+%
+%Eventually, we get
+%\begin{align}
+%& 
+%\min_{\overline\theta\in \Omega(F)} D(P_{\overline\theta} \| P\theta)
+%\\
+%&=
+%\sup_{\mu\in\M_F(G)}
+%\{
+%\langle
+%\theta, \mu
+%\rangle
+%-
+%A^\star
+%(\mu)
+%\}
+%\end{align}
+
+
+We have:
+\begin{align}
+& 
+\min_{\overline\theta\in \Omega(F)} D(P_{\overline\theta} \| P_\theta)
+\\
+&=
+\min_{\overline\theta \in \Omega(F)}
+\left\{
+- A(\overline\theta)
+-
+A(\theta)
+-
+\langle
+\nabla A(\overline\theta), \theta - \overline\theta
+\rangle
+\right\}
+\\
+&=
+\min_{\overline\theta \in \Omega(F)}
+\left\{
+- A(\overline\theta)
+-
+\langle
+\nabla A(\overline\theta), \theta - \overline\theta
+\rangle
+\right\}
+\label{vareq1}
+\end{align}
+So we've expressed everything in terms of $\overline\theta$.
+However, we already saw the connection between $\mu$'s and $\theta$'s:
+$$
+A(\overline\theta)
+=
+\langle
+\overline\mu
+,
+\overline\theta
+\rangle
+- A^\star(\overline\mu)
+$$
+And so we can write \eqref{vareq1} as:
+\begin{align}
+\eqref{vareq1}
+&=  
+\min_{\overline\theta \in \Omega(F)}
+\left\{
+- \langle
+\overline\mu
+,
+\overline\theta
+\rangle
++ A^\star(\overline\mu)
+-
+\langle
+\nabla A(\overline\theta), \theta - \overline\theta
+\rangle
+\right\}
+\\
+&=  
+\min_{\overline\theta \in \Omega(F)}
+\left\{
+ A^\star(\overline\mu)
+-
+\langle
+\nabla A(\overline\theta), \theta
+\rangle
+\right\}
+\\
+&=  
+\min_{\overline\theta \in \Omega(F)}
+\left\{
+ A^\star(\overline\mu)
+-
+\langle
+\overline\mu, \theta
+\rangle
+\right\}
+\label{final3}
+\\
+&=
+\sup_{\mu\in\M_F(G)}
+\{
+\langle
+\theta, \mu
+\rangle
+-
+A^\star
+(\mu)
+\}
+\end{align}
+where in \eqref{final3} we use the fact that $\nabla A(\overline\theta) = \overline\mu$ (we used this above too, in \eqref{expeq2}).
+The astute reader will notice that this is simply \eqref{meanfieldeq}, the mean field approximation.
+
+
+
+
+
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
