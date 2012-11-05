@@ -1,0 +1,261 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[retainorgcmds]{IEEEtrantools}
+\usepackage{mathrsfs}
+\usepackage{bbm}
+\usepackage{enumerate}
+\usepackage{hyperref}
+
+% Abbreviations
+\newcommand{\ie}{\textit{i.e.}}
+\newcommand{\eg}{\textit{e.g.}}
+
+% amsthm stuff:  Theorem, Definition, Lemma, Corollary
+\theoremstyle{definition} \newtheorem{definition}{Definition}
+\theoremstyle{definition} \newtheorem{observation}[definition]{Observation}
+\theoremstyle{definition} \newtheorem{proposition}[definition]{Proposition}
+\theoremstyle{definition} \newtheorem{lemma}[definition]{Lemma}
+\theoremstyle{definition} \newtheorem{corollary}[definition]{Corollary}
+\theoremstyle{definition} \newtheorem{theorem}[definition]{Theorem}
+
+%Symbols
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\M}{\mathbb{M}}
+\newcommand{\LB}{\mathbb{L}}
+\newcommand{\XS}{\mathcal{X}}
+\newcommand{\Mu}{\mathcal{M}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Ind}{\mathbbm{1}}
+
+% Math
+\newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
+\newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
+\newcommand{\size}[1]{\left\arrowvert #1 \right\arrowvert}
+\newcommand{\abs}[1]{\left\arrowvert #1 \right\arrowvert}
+\newcommand{\Oh}[1]{{\mathcal O}\left({#1}\right)}
+\newcommand{\oh}[1]{{o}\left({#1}\right)}
+\newcommand{\Om}[1]{{\Omega}\left({#1}\right)}
+\newcommand{\om}[1]{{\omega}\left({#1}\right)}
+\newcommand{\Th}[1]{{\Theta}\left({#1}\right)}
+\newcommand{\cbr}[1]{\left\{ #1 \right\}}
+\newcommand{\sbr}[1]{\left[ #1 \right]}
+\newcommand{\seq}[1]{\langle #1 \rangle}
+
+\title{CS395T Graphical Models: Scribe Notes}
+\author{Nevzat Onur Domani\c{c} \\ onur@cs.utexas.edu}
+\date{October 29, 2012}
+\begin{document}
+\maketitle
+
+\section{Properties of $A(\theta)$}
+\label{sec:properties-a}
+
+Consider the distribution $p_\theta$ for some $\theta \in \Omega$.
+Remember $\mu = \E_{p_\theta}\sbr{\phi(X)} = \nabla A(\theta)$.
+
+\textbf{I.} $\nabla A:\Omega \to \Mu$ is one-to-one iff the exponential family
+is minimal.
+
+\begin{proof}
+  If the exponential family is not minimal then $\exists \theta_1,
+  \theta_2$ such that $p_{\theta_1} = p_{\theta_2}$ and $\theta_1
+  \neq \theta_2$.  Then $\nabla A(\theta_1) = \nabla A(\theta_2)$
+  hence $\nabla A$ is not one-to-one.
+
+  If the exponential family is minimal then $A$ is strictly convex,
+  $\nabla^2 A(\theta) \succ 0$, so $\nabla A$ is one-to-one.
+\end{proof}
+
+\textbf{II.} $\forall \mu \in Int(\Mu)$, $\exists \theta(\mu) \in
+\Omega$ such that $\E_{p_{\theta(\mu)}}\sbr{\phi(x)} = \mu$, in other
+words $\nabla A(\theta(\mu)) = \mu$, so $\nabla A$ is onto $Int(\Mu)$.
+
+\section{Fenchel-Conjugate of $A$}
+\label{sec:fenchel-conjugate-a}
+
+For $\mu \in \R^d$ the Fenchel-Conjugate function of $A$ is defined as:
+\[ A^*(\mu) := \sup_{\theta \in \Omega} \cbr{\seq{\theta, \mu} -
+  A(\theta)} \]
+
+\begin{theorem}
+  \hfill
+  \begin{enumerate}[(I)]
+  \item $\forall \mu \in Int(\Mu)$, $A^*(\mu) = -H(p_{\theta(\mu)})$
+    (negative entropy)
+
+  \item $\forall \mu \notin Cl(\Mu)$, $A^*(\mu) = +\infty$
+
+  \item $\forall \mu \in \partial \Mu$, there exists a sequence
+    $\cbr{\mu_n} \subset Int(\Mu)$ converging to $m$, and $A^*(\mu) =
+    \lim\limits_{n \to \infty} A^*(\mu_n)$
+  \end{enumerate}
+
+  \begin{proof}
+    We prove property (I).  Since $\mu \in Int(\Mu)$, $\exists
+    \theta(\mu) \in \Omega$ such that $\nabla A(\theta(\mu)) = \mu$.
+    Remember the definition of $A^*$:
+    \[ A^*(\mu) = \sup_{\theta \in \Omega} \cbr{\seq{\theta, \mu} -
+      A(\theta)} \]
+    The $\theta$ that achieves the supremum is $\theta(\mu)$, so
+    $A^*(\mu) = \seq{\theta(\mu), \mu} - A(\theta(\mu))$.
+
+    From the definition of the entropy:
+    \begin{IEEEeqnarray*}{rCl}
+      -H(p_\theta) &=& \E_{p_\theta}\sbr{\log p_\theta(x)} \\
+      &=& \E_{p_\theta}\sbr{\seq{\theta, \phi(x)} - A(\theta)} \\
+      &=& \seq{\theta, \mu(\theta)} - A(\theta)
+    \end{IEEEeqnarray*}
+    so $-H(p_{\theta(\mu)}) = \seq{\theta(\mu), \mu} - A(\theta(\mu))
+    = A^*(\mu)$.
+  \end{proof}
+\end{theorem}
+
+\section{Variational Principle}
+\label{sec:vari-princ}
+
+\begin{theorem}
+  \[ A(\theta) = \sup_{\mu \in \Mu}\cbr{\seq{\theta, \mu} -
+    A^*(\mu)} \]
+  In other words, $A(\theta) = A^{**}(\theta)$, \ie, $A$ is the
+  Fenchel-Conjugate of $A^*$.
+\end{theorem}
+
+Note that this is a convex optimization problem since both
+$\seq{\theta, \mu}$ and the negative entropy is convex.  However
+specifying the objective function and the convex set takes exponential
+time.
+
+So in Graphical Model Inference we
+\begin{enumerate}[(a)]
+\item Approximate $\Mu$
+
+\item Approximate entropy $-A^*(\mu)$
+\end{enumerate}
+
+How to compute $A^*(\mu)$:
+\begin{enumerate}[(i)]
+\item Obtain $\theta(\mu)$ such that $\nabla A(\theta(\mu)) = \mu$.
+
+\item Compute $-H(p_{\theta(\mu)})$
+\end{enumerate}
+Let's look at an example:
+
+\subsection{Example: Bernoulli Distribution}
+\label{sec:exampl-bern-distr}
+
+Recall $p(x; \theta) = \exp \cbr{x \theta - \log(1 + \exp(\theta))}$
+for $x \in \cbr{0, 1}$.
+
+Let's check if $A^*(\mu) = \mu \log \mu + (1 - \mu)\log(1 - \mu)$.
+From the definition of the Fenchel-Conjugate we have:
+\[ A^*(\mu) = \sup_{\theta}\cbr{\theta \mu - \log(1 + \exp(\theta))} \]
+Taking derivative w.r.t. $\theta$ and setting it to zero:
+\[ \mu = \frac{\exp \theta}{1 + \exp \theta} \implies 
+   \exp \theta = \frac{\mu}{1-\mu} \implies
+   \theta = \log\frac{\mu}{1-\mu} \]
+so
+\begin{IEEEeqnarray*}{rCl}
+  A^*(\mu) &=& \theta \mu - \log(1 + \exp(\theta(\mu))) \\
+  &=& \mu \log \frac{\mu}{1-\mu} + \log(1 - \mu) \\
+  &=& \mu \log \mu + (1 - \mu) \log(1 - \mu)
+\end{IEEEeqnarray*}
+
+Now let's verify $A(\theta)$.  We have:
+\begin{equation}
+  \label{eq:Ber-A}
+  A(\theta) = \sup_\mu \cbr{\theta \mu - \mu \log \mu - (1 - \mu)
+    \log(1 - \mu)}
+\end{equation}
+Taking derivative w.r.t. $\mu$ and setting it to zero:
+\[ \theta = \log \mu +1-1 - \log(1-\mu) = \log\frac{\mu}{1-\mu}
+   \implies \mu = \frac{\exp\theta}{1 + \exp\theta} \]
+Substituting $\mu$ in equation~(\ref{eq:Ber-A}) gives $A(\theta) =
+\log(1 + \exp\theta)$.
+
+\subsubsection{Approximating Polytope in Discrete Models}
+\label{sec:appr-polyt-discr}
+
+$X = (X_1, \dotsc, X_p)$ where $X_s \in \XS = \cbr{0, \dotsc, r-1}$.
+We have:
+\[ p_\theta(X) = \exp \cbr{\sum_{s,j} \Ind_{s,j}(X)\theta_{sj} + 
+   \sum_{\substack{(s,t) \in E\\ j,k}} \Ind_{st,jk}(X)\theta_{st,jk} -
+   A(\theta)} \]
+
+We introduce the following shorthand notations:
+\begin{IEEEeqnarray*}{rCl}
+  \theta_s(X_s) &=& \sum_j \Ind_{s,j}(X_s) \theta_{s,j} \\
+  \theta_{st}(X_s, X_t) &=& \sum_{j,k} \Ind_{st,jk}(X_s, X_t) \theta_{st,jk}
+\end{IEEEeqnarray*}
+so $p_\theta(X)$ becomes $=\exp\cbr{\sum\limits_s \theta_s(X_s) +
+  \sum\limits_{(s,t) \in E} \theta_{st}(X_s, X_t) - A(\theta)}$.
+
+Let's have
+\begin{IEEEeqnarray*}{rCl}
+  \phi_s(X_s) &=& \sum_{j \in \XS} \Ind(X_s = j)\phi_s(j) \\
+  \text{and} && \\
+  \phi_{st}(X_s, X_t) &=& \sum_{j,k \in \XS} \Ind(X_s=j, X_t=k)\phi_{st}(j,k)
+\end{IEEEeqnarray*}
+so any sufficient statistics over discrete random variables can be
+expressed as a linear combination of indicator functions, thus the
+overcomplete representation is general.
+
+Now let's look at the mean parameters.  Remember that the Marginal Polytope
+$\M(G)$ is defined as:
+\[ \M(G) = \cbr{\mu : \exists p, \mu = \E_p\sbr{\phi(x)}}\]
+
+The mean parameters are:
+\begin{IEEEeqnarray*}{rCl}
+  \mu_{s,j} &=& \E\sbr{\Ind_{s,j}(X_s)} = \Prob(X_s = j) \\
+  \mu_{st,jk} &=& \E\sbr{\Ind_{st,jk}(X_s, X_t)} = \Prob(X_s=j, X_t=k)
+\end{IEEEeqnarray*}
+So we define:
+\begin{IEEEeqnarray*}{rCl}
+  \mu_{s}(X_s) &=& \sum_{j} \Ind_{s,j}(X_s) \mu_{s,j} \\
+  \mu_{st}(X_s,X_t) &=& \sum_{jk} \Ind_{st,jk}(X_s,X_t) \mu_{st,jk}
+\end{IEEEeqnarray*}
+Then the Marginal Polytope is:
+\[ \M(G) = \cbr{\mu_{s}(X_s), \mu_{st}(X_s,X_t) : \parbox{5.5cm}{node-wise and
+    pair-wise \\ marginals of some distribution $p$}} \]
+
+Note that we have the following set of constraints:
+\begin{itemize}
+\item 
+  \begin{IEEEeqnarray*}{rl}
+    &\mu_{s,j} \in [0, 1] \\
+    &\mu_{s}(X_s) \in [0, 1] \\
+    &\mu_{st}(X_s, X_t) \in [0, 1]
+  \end{IEEEeqnarray*}
+
+\item Normalization Constraints
+  \begin{IEEEeqnarray*}{rl}
+    \sum_{X_s} &\mu_{s}(X_s) = 1 \\
+    \sum_{X_s,X_t} &\mu_{st}(X_s, X_t) = 1
+  \end{IEEEeqnarray*}
+
+\item Marginalization Constraints
+  \begin{IEEEeqnarray*}{rl}
+    \sum_{X_t} &\mu_{st}(X_s, X_t) = \mu_{s}(X_s) \\
+    \sum_{X_s} &\mu_{st}(X_s, X_t) = \mu_{t}(X_t)
+  \end{IEEEeqnarray*}
+\end{itemize}
+
+These are called the ``local'' constraints and the number
+of constraints is $\Oh{\size{V} + \size{E}}$.
+
+We define:
+\[ \LB(G) = \cbr{
+  \begin{array}{l}
+    T_s(X_s) \\
+    T_{st}(X_s, X_t)
+  \end{array}
+  : \text{$T_{s}, T_{st}$ satisfy ``local'' constraints}
+} \]
+where $T_{s}$ and $T_{st}$ are called the pseudo-marginals.
+
+\end{document}
+
+%  LocalWords:  iff Fenchel supremum overcomplete polytope
